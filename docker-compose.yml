@@ -22,7 +22,7 @@ services:
     ports:
       - "8765:8765"
     environment:
-      SPRING_APPLICATION_JSON: '{"eureka":{"client":{"serviceUrl":{"defaultZone":"http://eureka-server:8761/eureka"}}}}'
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka
 
   order-service:
     build: order-service
@@ -34,13 +34,12 @@ services:
     depends_on:
       - order-db
       - api-gateway
-    #ports:
-    #  - "9090:9090"
+
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://order-db:5432/order_db
       SPRING_DATASOURCE_USERNAME: order
       SPRING_DATASOURCE_PASSWORD: order
-      SPRING_APPLICATION_JSON: '{"eureka":{"client":{"serviceUrl":{"defaultZone":"http://eureka-server:8761/eureka"}}}}'
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka
 
   order-db:
     image: postgres:14.4-alpine
@@ -63,4 +62,3 @@ volumes:
 networks:
   restaurant-network:
     name: restaurant-network
-    driver: bridge
