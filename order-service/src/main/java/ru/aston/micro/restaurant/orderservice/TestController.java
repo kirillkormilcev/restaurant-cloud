@@ -1,4 +1,4 @@
-package ru.aston.micro.restaurant.eurekaclient;
+package ru.aston.micro.restaurant.orderservice;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
