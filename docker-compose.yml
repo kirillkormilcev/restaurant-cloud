@@ -33,7 +33,6 @@ services:
     depends_on:
       - order-db
       - api-gateway
-
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://order-db:5432/order_db
       SPRING_DATASOURCE_USERNAME: order
@@ -56,8 +55,110 @@ services:
       POSTGRES_PASSWORD: order
       PGDATA: /var/lib/postgresql/data/pgdata
 
+  payment-service:
+    build: payment-service
+    image: payment-service-image
+    container_name: payment-service-container
+    networks:
+      - restaurant-network
+    restart: always
+    depends_on:
+      - payment-db
+      - api-gateway
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://payment-db:5432/payment_db
+      SPRING_DATASOURCE_USERNAME: payment
+      SPRING_DATASOURCE_PASSWORD: payment
+
+  payment-db:
+    image: postgres:14.4-alpine
+    container_name: payment-db-container
+    networks:
+      - restaurant-network
+    restart: always
+    volumes:
+      - payment-db:/var/lib/postgresql/data/pgdata
+    ports:
+      - 6544:5432
+    environment:
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: payment
+      POSTGRES_PASSWORD: payment
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+  restaurant-service:
+    build: restaurant-service
+    image: restaurant-service-image
+    container_name: restaurant-service-container
+    networks:
+      - restaurant-network
+    restart: always
+    depends_on:
+      - restaurant-db
+      - api-gateway
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://restaurant-db:5432/restaurant_db
+      SPRING_DATASOURCE_USERNAME: restaurant
+      SPRING_DATASOURCE_PASSWORD: restaurant
+
+  restaurant-db:
+    image: postgres:14.4-alpine
+    container_name: restaurant-db-container
+    networks:
+      - restaurant-network
+    restart: always
+    volumes:
+      - payment-db:/var/lib/postgresql/data/pgdata
+    ports:
+      - 6546:5432
+    environment:
+      POSTGRES_DB: restaurant_db
+      POSTGRES_USER: restaurant
+      POSTGRES_PASSWORD: restaurant
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9997:9997"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:19092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8090:8080"
+    environment:
+      DYNAMIC_CONFIG_ENABLED: "true"
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:19092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+
 volumes:
   order-db:
+  payment-db:
+  restaurant-db:
 
 networks:
   restaurant-network:
