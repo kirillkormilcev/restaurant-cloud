@@ -1,0 +1,5 @@
+topics:
+  payment:
+    name: "payment_topic"
+  restaurant:
+    name: "restaurant_topic"
