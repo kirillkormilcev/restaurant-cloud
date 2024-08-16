@@ -1,0 +1,161 @@
+services:
+  eureka-server:
+    build: eureka-server
+    image: eureka-server-image
+    container_name: eureka-server-container
+    restart: always
+    ports:
+      - 8761:8761
+
+  api-gateway:
+    build: api-gateway
+    image: api-gateway-image
+    container_name: api-gateway-container
+    restart: always
+    depends_on:
+      - eureka-server
+    ports:
+      - 8765:8765
+    environment:
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka
+
+  order-service:
+    build: order-service
+    image: order-service-image
+    container_name: order-service-container
+    restart: always
+    depends_on:
+      kafka:
+        condition: service_healthy
+      api-gateway:
+        condition: service_started
+      order-db:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://order-db:5432/order_db
+      SPRING_DATASOURCE_USERNAME: order
+      SPRING_DATASOURCE_PASSWORD: order
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka
+
+  order-db:
+    image: postgres:14.4-alpine
+    container_name: order-db-container
+    restart: always
+#    volumes:
+#      - order-db:/var/lib/postgresql/data/pgdata
+    ports:
+      - 6542:5432
+    environment:
+      POSTGRES_DB: order_db
+      POSTGRES_USER: order
+      POSTGRES_PASSWORD: order
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+  payment-service:
+    build: payment-service
+    image: payment-service-image
+    container_name: payment-service-container
+    restart: always
+    depends_on:
+      kafka:
+        condition: service_healthy
+      payment-db:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://payment-db:5432/payment_db
+      SPRING_DATASOURCE_USERNAME: payment
+      SPRING_DATASOURCE_PASSWORD: payment
+
+  payment-db:
+    image: postgres:14.4-alpine
+    container_name: payment-db-container
+    restart: always
+#    volumes:
+#      - payment-db:/var/lib/postgresql/data/pgdata
+    ports:
+      - 6544:5432
+    environment:
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: payment
+      POSTGRES_PASSWORD: payment
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+  restaurant-service:
+    build: restaurant-service
+    image: restaurant-service-image
+    container_name: restaurant-service-container
+    restart: always
+    depends_on:
+      kafka:
+        condition: service_healthy
+      restaurant-db:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://restaurant-db:5432/restaurant_db
+      SPRING_DATASOURCE_USERNAME: restaurant
+      SPRING_DATASOURCE_PASSWORD: restaurant
+
+  restaurant-db:
+    image: postgres:14.4-alpine
+    container_name: restaurant-db-container
+    restart: always
+#    volumes:
+#      - restaurant-db:/var/lib/postgresql/data/pgdata
+    ports:
+      - 6546:5432
+    environment:
+      POSTGRES_DB: restaurant_db
+      POSTGRES_USER: restaurant
+      POSTGRES_PASSWORD: restaurant
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - 2181:2181
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    #  ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka
+    hostname: kafka
+    container_name: kafka
+    depends_on:
+      zookeeper:
+        condition: service_started
+    ports:
+      - 9092:9092
+      - 19092:19092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,OUTSIDE://0.0.0.0:19092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,OUTSIDE://localhost:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "9092" ]
+      interval: 30s
+      retries: 5
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - 8090:8080
+    environment:
+      DYNAMIC_CONFIG_ENABLED: "true"
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+
+#volumes:
+#  order-db:
+#  payment-db:
+#  restaurant-db:
