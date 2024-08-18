@@ -34,6 +34,16 @@ public class Order {
   Long id;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @Column(name = "order_type", nullable = false)
+  OrderType orderType;
+
+  @Column(name = "user_id", nullable = false)
+  Long userId;
+
+  @Column(name = "user_account", nullable = false)
+  Long userAccount;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "order_status", nullable = false)
   OrderStatus orderStatus;
 }

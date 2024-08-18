@@ -5,24 +5,35 @@ services:
     container_name: eureka-server-container
     restart: always
     ports:
-      - 8761:8761
+      - "8761:8761"
+    profiles:
+      - "docker"
+      - "all"
 
   api-gateway:
     build: api-gateway
     image: api-gateway-image
     container_name: api-gateway-container
+    volumes:
+      - api-gateway-volume:/api-gateway
     restart: always
     depends_on:
       - eureka-server
     ports:
-      - 8765:8765
+      - "8765:8765"
     environment:
       eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka
+    profiles:
+      - "docker"
+      - "all"
+
 
   order-service:
     build: order-service
     image: order-service-image
     container_name: order-service-container
+    volumes:
+      - order-service-volume:/order-service
     restart: always
     depends_on:
       kafka:
@@ -36,25 +47,35 @@ services:
       SPRING_DATASOURCE_USERNAME: order
       SPRING_DATASOURCE_PASSWORD: order
       eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka
+    profiles:
+      - "local"
+      - "all"
+
 
   order-db:
     image: postgres:14.4-alpine
     container_name: order-db-container
     restart: always
-#    volumes:
-#      - order-db:/var/lib/postgresql/data/pgdata
+    volumes:
+      - order-db:/var/lib/postgresql/data/pgdata
     ports:
-      - 6542:5432
+      - "6542:5432"
     environment:
       POSTGRES_DB: order_db
       POSTGRES_USER: order
       POSTGRES_PASSWORD: order
       PGDATA: /var/lib/postgresql/data/pgdata
+    profiles:
+      - "docker"
+      - "all"
+
 
   payment-service:
     build: payment-service
     image: payment-service-image
     container_name: payment-service-container
+    volumes:
+      - payment-service-volume:/payment-service
     restart: always
     depends_on:
       kafka:
@@ -65,25 +86,34 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://payment-db:5432/payment_db
       SPRING_DATASOURCE_USERNAME: payment
       SPRING_DATASOURCE_PASSWORD: payment
+    profiles:
+      - "local"
+      - "all"
+
 
   payment-db:
     image: postgres:14.4-alpine
     container_name: payment-db-container
     restart: always
-#    volumes:
-#      - payment-db:/var/lib/postgresql/data/pgdata
+    volumes:
+      - payment-db:/var/lib/postgresql/data/pgdata
     ports:
-      - 6544:5432
+      - "6544:5432"
     environment:
       POSTGRES_DB: payment_db
       POSTGRES_USER: payment
       POSTGRES_PASSWORD: payment
       PGDATA: /var/lib/postgresql/data/pgdata
+    profiles:
+      - "docker"
+      - "all"
 
   restaurant-service:
     build: restaurant-service
     image: restaurant-service-image
     container_name: restaurant-service-container
+    volumes:
+      - restaurant-service-volume:/restaurant-service
     restart: always
     depends_on:
       kafka:
@@ -94,30 +124,43 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://restaurant-db:5432/restaurant_db
       SPRING_DATASOURCE_USERNAME: restaurant
       SPRING_DATASOURCE_PASSWORD: restaurant
+    profiles:
+      - "local"
+      - "all"
 
   restaurant-db:
     image: postgres:14.4-alpine
     container_name: restaurant-db-container
     restart: always
-#    volumes:
-#      - restaurant-db:/var/lib/postgresql/data/pgdata
+    volumes:
+      - restaurant-db:/var/lib/postgresql/data/pgdata
     ports:
-      - 6546:5432
+      - "6546:5432"
     environment:
       POSTGRES_DB: restaurant_db
       POSTGRES_USER: restaurant
       POSTGRES_PASSWORD: restaurant
       PGDATA: /var/lib/postgresql/data/pgdata
+    profiles:
+      - "docker"
+      - "all"
+
 
   zookeeper:
     image: confluentinc/cp-zookeeper
     hostname: zookeeper
     container_name: zookeeper
+    volumes:
+      - zookeeper-volume:/zookeeper
     ports:
-      - 2181:2181
+      - "2181:2181"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
-    #  ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_TICK_TIME: 2000
+    profiles:
+      - "docker"
+      - "all"
+
 
   kafka:
     image: confluentinc/cp-kafka
@@ -127,8 +170,8 @@ services:
       zookeeper:
         condition: service_started
     ports:
-      - 9092:9092
-      - 19092:19092
+      - "9092:9092"
+      - "19092:19092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -143,19 +186,35 @@ services:
       retries: 5
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    profiles:
+      - "docker"
+      - "all"
+
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
+    volumes:
+      - kafka-ui-volume:/kafka-ui
     ports:
-      - 8090:8080
+      - "8090:8080"
     environment:
       DYNAMIC_CONFIG_ENABLED: "true"
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    profiles:
+      - "docker"
+      - "all"
 
-#volumes:
-#  order-db:
-#  payment-db:
-#  restaurant-db:
+
+volumes:
+  api-gateway-volume:
+  order-service-volume:
+  order-db:
+  payment-service-volume:
+  payment-db:
+  restaurant-service-volume:
+  restaurant-db:
+  zookeeper-volume:
+  kafka-ui-volume:

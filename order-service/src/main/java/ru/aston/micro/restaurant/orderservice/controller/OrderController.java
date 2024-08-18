@@ -1,5 +1,6 @@
 package ru.aston.micro.restaurant.orderservice.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,7 +22,7 @@ public class OrderController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public Order createOrder(@RequestBody Order order) {
+  public Order createOrder(@RequestBody Order order) throws JsonProcessingException {
     return orderService.create(order);
   }
 }
