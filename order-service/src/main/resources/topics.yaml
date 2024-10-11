@@ -1,0 +1,9 @@
+topics:
+  payment-request:
+      name: "payment_request_topic"
+  payment-response:
+      name: "payment_response_topic"
+  restaurant-request:
+      name: "restaurant_request_topic"
+  restaurant-response:
+      name: "restaurant_response_topic"

@@ -7,6 +7,7 @@
     <groupId>ru.aston.micro.restaurant</groupId>
     <artifactId>restaurant-cloud</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -14,6 +15,10 @@
 
     <modules>
         <module>eureka-server</module>
+        <module>api-gateway</module>
+        <module>order-service</module>
+        <module>payment-service</module>
+        <module>restaurant-service</module>
     </modules>
 
 </project>

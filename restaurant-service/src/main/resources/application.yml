@@ -1,0 +1,23 @@
+server:
+    port: 8080
+spring:
+    application:
+        name: restaurant-service
+    datasource:
+        driver-class-name: org.postgresql.Driver
+        password: restaurant
+        url: jdbc:postgresql://localhost:6546/restaurant_db
+        username: restaurant
+    jpa:
+        hibernate:
+            ddl-auto: create-drop
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.PostgreSQLDialect
+                format_sql: true
+        show-sql: true
+    kafka:
+        bootstrap-servers: kafka:9092
+    sql:
+        init:
+            mode: always

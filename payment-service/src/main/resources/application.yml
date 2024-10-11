@@ -1,0 +1,43 @@
+server:
+    port: 8081
+
+spring:
+    application:
+        name: payment-service
+    config:
+        import: classpath:topics.yaml
+    datasource:
+        driver-class-name: org.postgresql.Driver
+        password: payment
+        url: jdbc:postgresql://localhost:6544/payment_db
+        username: payment
+
+    jpa:
+        hibernate:
+            ddl-auto: create-drop
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.PostgreSQLDialect
+                format_sql: true
+        show-sql: true
+    sql:
+        init:
+            mode: always
+
+    kafka:
+        bootstrap-servers:
+            - kafka:9092 # for container
+            - localhost:19092 # for local
+        producer:
+            key-serializer: org.apache.kafka.common.serialization.StringSerializer
+            value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+        consumer:
+            group-id: payment
+            key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+        properties:
+            spring:
+                json:
+                    trusted:
+                        packages: "*"
+
